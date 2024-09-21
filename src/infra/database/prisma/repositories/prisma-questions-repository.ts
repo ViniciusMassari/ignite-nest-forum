@@ -39,6 +39,13 @@ export class PrismaQuestionsRepository implements QuestionsRepository {
 
     return questions.map(PrismaQuestionMapper.toDomain);
   }
+  async create(question: Question): Promise<void> {
+    const data = PrismaQuestionMapper.toPrisma(question);
+
+    await this.prisma.question.create({
+      data,
+    });
+  }
   async save(question: Question): Promise<void> {
     const data = PrismaQuestionMapper.toPrisma(question);
 
@@ -49,13 +56,7 @@ export class PrismaQuestionsRepository implements QuestionsRepository {
       data,
     });
   }
-  async create(question: Question): Promise<void> {
-    const data = PrismaQuestionMapper.toPrisma(question);
 
-    await this.prisma.question.create({
-      data,
-    });
-  }
   async delete(question: Question): Promise<void> {
     const data = PrismaQuestionMapper.toPrisma(question);
 
