@@ -7,18 +7,20 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { QuestionFactory } from 'test/factories/make-question';
 import { StudentFactory } from 'test/factories/make-student';
+import { AttachmentFactory } from 'test/factories/make-attachment';
 
 describe('Answer question (E2E)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let studentFactory: StudentFactory;
   let questionFactory: QuestionFactory;
+  let attachmentFactory: AttachmentFactory;
   let jwt: JwtService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, DatabaseModule],
-      providers: [StudentFactory, QuestionFactory],
+      providers: [StudentFactory, QuestionFactory, AttachmentFactory],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -33,6 +35,8 @@ describe('Answer question (E2E)', () => {
 
   test('[POST] /questions/:questionId/answers', async () => {
     const user = await studentFactory.makePrismaStudent();
+    const attachment1 = await attachmentFactory.makePrismaAttachment();
+    const attachment2 = await attachmentFactory.makePrismaAttachment();
 
     const accessToken = jwt.sign({ sub: user.id.toString() });
 
@@ -47,6 +51,7 @@ describe('Answer question (E2E)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         content: 'New answer',
+        attachments: [attachment1.id.toString(), attachment2.id.toString()],
       });
 
     expect(response.statusCode).toBe(201);
@@ -58,5 +63,13 @@ describe('Answer question (E2E)', () => {
     });
 
     expect(answerOnDatabase).toBeTruthy();
+
+    const attachmentsOnDatabase = await prisma.attachment.findMany({
+      where: {
+        answerId: answerOnDatabase?.id,
+      },
+    });
+
+    expect(attachmentsOnDatabase).toHaveLength(2);
   });
 });
