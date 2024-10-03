@@ -1,46 +1,38 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  Query,
-} from '@nestjs/common';
-import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe';
-import { z } from 'zod';
-import { FetchAnswerCommentsUseCase } from '@/domain/forum/application/use-cases/fetch-answer-comments';
-import { CommentPresenter } from '../presenters/comment-presenter';
+import { AnswerCommentsRepository } from '@/domain/forum/application/repositories/answer-comments-repository';
+import { Either, right } from '@/core/either';
+import { Injectable } from '@nestjs/common';
+import { CommentWithAuthor } from '../../../domain/forum/enterprise/entities/value-objects/comment-with-author';
 
-const pageQueryParamSchema = z
-  .string()
-  .optional()
-  .default('1')
-  .transform(Number)
-  .pipe(z.number().min(1));
+interface FetchAnswerCommentsUseCaseRequest {
+  answerId: string;
+  page: number;
+}
 
-const queryValidationPipe = new ZodValidationPipe(pageQueryParamSchema);
+type FetchAnswerCommentsUseCaseResponse = Either<
+  null,
+  {
+    comments: CommentWithAuthor[];
+  }
+>;
 
-type PageQueryParamSchema = z.infer<typeof pageQueryParamSchema>;
+@Injectable()
+export class FetchAnswerCommentsUseCase {
+  constructor(private answerCommentsRepository: AnswerCommentsRepository) {}
 
-@Controller('/answers/:answerId/comments')
-export class FetchAnswerCommentsController {
-  constructor(private fetchAnswerComments: FetchAnswerCommentsUseCase) {}
+  async execute({
+    answerId,
+    page,
+  }: FetchAnswerCommentsUseCaseRequest): Promise<FetchAnswerCommentsUseCaseResponse> {
+    const comments =
+      await this.answerCommentsRepository.findManyByAnswerIdWithAuthor(
+        answerId,
+        {
+          page,
+        }
+      );
 
-  @Get()
-  async handle(
-    @Query('page', queryValidationPipe) page: PageQueryParamSchema,
-    @Param('answerId') answerId: string
-  ) {
-    const result = await this.fetchAnswerComments.execute({
-      page,
-      answerId,
+    return right({
+      comments,
     });
-
-    if (result.isLeft()) {
-      throw new BadRequestException();
-    }
-
-    const answerComments = result.value.answerComments;
-
-    return { comments: answerComments.map(CommentPresenter.toHTTP) };
   }
 }
