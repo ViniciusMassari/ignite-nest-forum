@@ -39,10 +39,12 @@ import { DeleteAnswerCommentUseCase } from '@/domain/forum/application/use-cases
 import { FetchQuestionCommentsUseCase } from '@/domain/forum/application/use-cases/fetch-question-comments';
 import { FetchQuestionCommentsController } from './controllers/fetch-question-comments.controller';
 import { FetchAnswerCommentsUseCase } from '@/domain/forum/application/use-cases/fetch-answer-comments';
-import { FetchAnswerCommentsController } from './controllers/fetch-answer-comments.controller';
 import { UploadAttachmentController } from './controllers/upload-attachment.controller';
 import { UploadAndCreateAttachmentUseCase } from '@/domain/forum/application/use-cases/upload-and-create-attachment';
 import { StorageModule } from '../storage/storage.module';
+import { ReadNotificationUseCase } from '@/domain/notification/application/use-cases/read-notification';
+import { ReadNotificationController } from './controllers/read-notification.controller';
+import { FetchAnswerCommentsController } from './controllers/fetch-answer-comments.controller';
 
 @Module({
   imports: [DatabaseModule, CryptographyModule, StorageModule],
@@ -66,6 +68,7 @@ import { StorageModule } from '../storage/storage.module';
     FetchQuestionCommentsController,
     FetchAnswerCommentsController,
     UploadAttachmentController,
+    ReadNotificationController,
   ],
   providers: [
     {
@@ -91,6 +94,7 @@ import { StorageModule } from '../storage/storage.module';
     FetchQuestionCommentsUseCase,
     FetchAnswerCommentsUseCase,
     UploadAndCreateAttachmentUseCase,
+    ReadNotificationUseCase,
   ],
 })
 export class HttpModule {}
